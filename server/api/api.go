@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"path/filepath"
 	"strconv"
@@ -157,8 +158,11 @@ func (a *API) getContainerAllowingReadTokenForBlock(r *http.Request, blockID str
 	}
 
 	// Native auth: always use root workspace
+	vars := mux.Vars(r)
+	workspaceID := vars["workspaceID"]
+
 	container := store.Container{
-		WorkspaceID: "0",
+		WorkspaceID: workspaceID,
 	}
 
 	// Has session
@@ -455,12 +459,14 @@ func (a *API) handleGetMe(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
+	log.Printf("handleGetMe: %v", user)
 
 	userData, err := json.Marshal(user)
 	if err != nil {
 		a.errorResponse(w, http.StatusInternalServerError, "", err)
 		return
 	}
+	log.Printf("handleGetMe: %v", userData)
 
 	jsonBytesResponse(w, http.StatusOK, userData)
 

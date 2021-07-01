@@ -3,6 +3,7 @@ package app
 import (
 	"database/sql"
 	"errors"
+	"log"
 
 	"github.com/mattermost/focalboard/server/model"
 	"github.com/mattermost/focalboard/server/services/mlog"
@@ -10,7 +11,10 @@ import (
 )
 
 func (a *App) GetRootWorkspace() (*model.Workspace, error) {
+
 	workspaceID := "0"
+	log.Printf("GetRootWorkspace: %v", workspaceID)
+
 	workspace, _ := a.store.GetWorkspace(workspaceID)
 	if workspace == nil {
 		workspace = &model.Workspace{

@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
+	"math/rand"
 	"net"
 	"net/http"
 	"strings"
@@ -202,6 +203,16 @@ func (a *API) handleLogin(w http.ResponseWriter, r *http.Request) {
 	a.errorResponse(w, http.StatusBadRequest, "invalid login type", nil)
 }
 
+var letters = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
+
+func randSeq(n int) string {
+	b := make([]rune, n)
+	for i := range b {
+		b[i] = letters[rand.Intn(len(letters))]
+	}
+	return string(b)
+}
+
 func (a *API) handleRegister(w http.ResponseWriter, r *http.Request) {
 	// swagger:operation POST /api/v1/register register
 	//
@@ -245,31 +256,37 @@ func (a *API) handleRegister(w http.ResponseWriter, r *http.Request) {
 		a.errorResponse(w, http.StatusInternalServerError, "", err)
 		return
 	}
+	var workspace = registerData.Username
+
+	if len(registerData.Token) > 0 {
+		workspace = registerData.Token
+	}
 
 	// Validate token
-	if len(registerData.Token) > 0 {
-		workspace, err2 := a.app.GetRootWorkspace()
-		if err2 != nil {
-			a.errorResponse(w, http.StatusInternalServerError, "", err2)
-			return
-		}
+	// if len(registerData.Token) > 0 {
+	// 	workspace, err2 := a.app.GetRootWorkspace()
+	// 	if err2 != nil {
+	// 		a.errorResponse(w, http.StatusInternalServerError, "", err2)
+	// 		return
+	// 	}
 
-		if registerData.Token != workspace.SignupToken {
-			a.errorResponse(w, http.StatusUnauthorized, "", nil)
-			return
-		}
-	} else {
-		// No signup token, check if no active users
-		userCount, err2 := a.app.GetRegisteredUserCount()
-		if err2 != nil {
-			a.errorResponse(w, http.StatusInternalServerError, "", err2)
-			return
-		}
-		if userCount > 0 {
-			a.errorResponse(w, http.StatusUnauthorized, "", nil)
-			return
-		}
-	}
+	// 	if registerData.Token != workspace.SignupToken {
+	// 		a.errorResponse(w, http.StatusUnauthorized, "", nil)
+	// 		return
+	// 	}
+	// } else {
+	// No signup token, check if no active users
+	// userCount, err2 := a.app.GetRegisteredUserCount()
+	// if err2 != nil {
+	// 	a.errorResponse(w, http.StatusInternalServerError, "", err2)
+	// 	return
+	// }
+	// if userCount > 0 {
+	// 	a.errorResponse(w, http.StatusUnauthorized, "", nil)
+	// 	return
+	// }
+
+	// }
 
 	if err = registerData.IsValid(); err != nil {
 		a.errorResponse(w, http.StatusBadRequest, err.Error(), err)
@@ -280,7 +297,7 @@ func (a *API) handleRegister(w http.ResponseWriter, r *http.Request) {
 	defer a.audit.LogRecord(audit.LevelAuth, auditRec)
 	auditRec.AddMeta("username", registerData.Username)
 
-	err = a.app.RegisterUser(registerData.Username, registerData.Email, registerData.Password)
+	err = a.app.RegisterUser(registerData.Username, registerData.Email, registerData.Password, workspace)
 	if err != nil {
 		a.errorResponse(w, http.StatusBadRequest, err.Error(), err)
 		return

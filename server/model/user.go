@@ -25,7 +25,7 @@ type User struct {
 	AuthService string `json:"-"`
 
 	// swagger:ignore
-	AuthData string `json:"-"`
+	AuthData string `json:"auth_data"`
 
 	// User settings
 	// required: true
@@ -49,6 +49,7 @@ type Session struct {
 	Token       string                 `json:"token"`
 	UserID      string                 `json:"user_id"`
 	AuthService string                 `json:"authService"`
+	AuthData    string                 `json:"auth_data"`
 	Props       map[string]interface{} `json:"props"`
 	CreateAt    int64                  `json:"create_at,omitempty"`
 	UpdateAt    int64                  `json:"update_at,omitempty"`
