@@ -24,7 +24,9 @@ class OctoClient {
         return readToken
     }
 
-    constructor(serverUrl?: string, public workspaceId = '0') {
+    constructor(serverUrl?: string, public workspaceId = localStorage.getItem('workspaceId') || '0') {
+        Utils.log(`public workspaceId: ${this.workspaceId}`)
+
         this.serverUrl = (serverUrl || Utils.getBaseURL(true)).replace(/\/$/, '')
         Utils.log(`OctoClient serverUrl: ${this.serverUrl}`)
     }
@@ -61,6 +63,7 @@ class OctoClient {
 
     logout() {
         localStorage.removeItem('focalboardSessionId')
+        localStorage.removeItem('workspaceId')
     }
 
     async register(email: string, username: string, password: string, token?: string): Promise<{code: number, json: any}> {
@@ -97,6 +100,7 @@ class OctoClient {
     }
 
     private workspacePath() {
+        Utils.log(`workspacePath: ${this.workspaceId}`)
         return `/api/v1/workspaces/${this.workspaceId}`
     }
 

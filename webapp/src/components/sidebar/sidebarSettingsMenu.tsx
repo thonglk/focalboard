@@ -56,6 +56,11 @@ const SidebarSettingsMenu = React.memo((props: Props) => {
             displayName: 'English',
         },
         {
+            code: 'vi',
+            name: 'vietnamese',
+            displayName: 'Tiếng Việt',
+        },
+        {
             code: 'es',
             name: 'spanish',
             displayName: 'Español',

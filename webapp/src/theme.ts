@@ -37,9 +37,9 @@ export const defaultThemeName = 'default-theme'
 export const defaultTheme = {
     mainBg: '255, 255, 255',
     mainFg: '55, 53, 47',
-    buttonBg: '22, 109, 224',
+    buttonBg: '33, 33, 33',
     buttonFg: '255, 255, 255',
-    sidebarBg: '20, 93, 191',
+    sidebarBg: '33, 33, 33',
     sidebarFg: '255, 255, 255',
     sidebarWhiteLogo: 'true',
 
