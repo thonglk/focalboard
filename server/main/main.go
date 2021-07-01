@@ -1,3 +1,4 @@
+// +build linux,amd64,go1.15,!cgo
 // Package classification Focalboard Server
 //
 // Server for Focalboard
@@ -160,12 +161,7 @@ func main() {
 		config.Port = *pPort
 	}
 
-	db, err := server.NewStore(config, logger)
-	if err != nil {
-		logger.Fatal("server.NewStore ERROR", mlog.Err(err))
-	}
-
-	server, err := server.New(config, singleUserToken, db, logger)
+	server, err := server.New(config, singleUserToken, logger)
 	if err != nil {
 		logger.Fatal("server.New ERROR", mlog.Err(err))
 	}
@@ -240,12 +236,7 @@ func startServer(webPath string, filesPath string, port int, singleUserToken, db
 		config.DBConfigString = dbConfigString
 	}
 
-	db, err := server.NewStore(config, logger)
-	if err != nil {
-		logger.Fatal("server.NewStore ERROR", mlog.Err(err))
-	}
-
-	pServer, err = server.New(config, singleUserToken, db, logger)
+	pServer, err = server.New(config, singleUserToken, logger)
 	if err != nil {
 		logger.Fatal("server.New ERROR", mlog.Err(err))
 	}
