@@ -78,13 +78,13 @@ const SidebarUserMenu = React.memo((props: Props) => {
 
                                     <Menu.Text
                                         id='about'
-                                        name={intl.formatMessage({id: 'Sidebar.about', defaultMessage: 'About Hyper'})}
+                                        name={intl.formatMessage({id: 'Sidebar.about', defaultMessage: 'About Focalboard'})}
                                         onClick={async () => {
-                                            window.open('https://facebook.com/thongglk', '_blank')
+                                            window.open('https://www.focalboard.com?utm_source=webapp', '_blank')
 
                                             // TODO: Review if this is needed in the future, this is to fix the problem with linux webview links
                                             if ((window as any).openInNewBrowser) {
-                                                (window as any).openInNewBrowser('https://facebook.com/thongglk')
+                                                (window as any).openInNewBrowser('https://www.focalboard.com?utm_source=webapp')
                                             }
                                         }}
                                     />

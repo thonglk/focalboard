@@ -68,8 +68,7 @@ class BoardPage extends React.Component<Props, State> {
         }
 
         this.setWorkspaceUsers()
-
-        Utils.log(`BoardPage. boardId_: ${boardId}`)
+        Utils.log(`BoardPage. boardId: ${boardId}`)
     }
 
     shouldComponentUpdate(): boolean {
@@ -95,7 +94,7 @@ class BoardPage extends React.Component<Props, State> {
                 }
                 document.title = title
             } else {
-                document.title = 'Hyper'
+                document.title = 'Focalboard'
             }
         }
         if (this.state.workspace?.id !== prevState.workspace?.id) {
@@ -105,7 +104,6 @@ class BoardPage extends React.Component<Props, State> {
 
     async setWorkspaceUsers() {
         const workspaceUsers = await octoClient.getWorkspaceUsers()
-        Utils.log('setWorkspaceUsers')
 
         // storing workspaceUsersById in state to avoid re-computation in each render cycle
         this.setState({
@@ -174,10 +172,10 @@ class BoardPage extends React.Component<Props, State> {
         const {intl} = this.props
         const {workspace, workspaceTree} = this.state
 
-        Utils.log(`BoardPage.render (workspace ${localStorage.getItem('workspaceId')}) ${this.state.boardTree?.board?.title}`)
+        Utils.log(`BoardPage.render (workspace ${this.props.match.params.workspaceId || '0'}) ${this.state.boardTree?.board?.title}`)
 
         // TODO: Make this less brittle. This only works because this is the root render function
-        octoClient.workspaceId = localStorage.getItem('workspaceId') || ''
+        octoClient.workspaceId = this.props.match.params.workspaceId || '0'
 
         if (this.props.readonly && this.state.syncFailed) {
             Utils.log('BoardPage.render: sync failed')

@@ -32,9 +32,6 @@ const App = React.memo((): JSX.Element => {
         client.getMe().then((loadedUser?: IUser) => {
             setUser(loadedUser)
             setInitialLoad(true)
-            if (loadedUser?.auth_data) {
-                localStorage.setItem('workspaceId', loadedUser.auth_data)
-            }
         })
     }, [])
 
@@ -76,14 +73,14 @@ const App = React.memo((): JSX.Element => {
                                 {initialLoad && !user && <Redirect to='/login'/>}
                                 <BoardPage/>
                             </Route>
-                            <Route path='/:workspaceId/shared'>
+                            <Route path='/workspace/:workspaceId/shared'>
                                 <BoardPage readonly={true}/>
                             </Route>
                             <Route
-                                path='/:workspaceId/'
+                                path='/workspace/:workspaceId/'
                                 render={({match}) => {
                                     if (initialLoad && !user) {
-                                        let redirectUrl = '/' + Utils.buildURL(`/${match.params.workspaceId}/`)
+                                        let redirectUrl = '/' + Utils.buildURL(`/workspace/${match.params.workspaceId}/`)
                                         if (redirectUrl.indexOf('//') === 0) {
                                             redirectUrl = redirectUrl.slice(1)
                                         }
@@ -95,20 +92,10 @@ const App = React.memo((): JSX.Element => {
                                     )
                                 }}
                             />
-                            <Route
-                                path='/'
-                                render={() => {
-                                    if (initialLoad && !user) {
-                                        return <Redirect to='/login'/>
-                                    } else if (user) {
-                                        Utils.log(`user: ${user.auth_data}`)
-
-                                        const workspaceUrl = `/${encodeURIComponent(user.auth_data)}`
-                                        return (<Redirect to={workspaceUrl}/>)
-                                    }
-                                    return null
-                                }}
-                            />
+                            <Route path='/'>
+                                {initialLoad && !user && <Redirect to='/login'/>}
+                                <BoardPage/>
+                            </Route>
                         </Switch>
                     </div>
                 </div>

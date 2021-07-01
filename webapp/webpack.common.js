@@ -101,7 +101,7 @@ function makeCommonConfig() {
             }),
             new HtmlWebpackPlugin({
                 inject: true,
-                title: 'Hyper',
+                title: 'Focalboard',
                 chunks: ['main'],
                 template: 'html-templates/page.ejs',
                 filename: 'index.html',
@@ -110,7 +110,7 @@ function makeCommonConfig() {
         ],
         entry: ['./src/main.tsx', './src/userSettings.ts'],
         output: {
-            library: 'Hyper',
+            library: 'Focalboard',
             filename: 'static/[name].js',
             path: outpath,
         },

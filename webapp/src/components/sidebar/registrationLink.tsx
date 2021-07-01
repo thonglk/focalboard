@@ -46,9 +46,7 @@ const RegistrationLink = React.memo((props: Props) => {
         }
     }
 
-    // const registrationUrl = Utils.buildURL('/register?t=' + workspace?.signupToken, true)
-    const workspaceId = localStorage.getItem('workspaceId') || 'null'
-    const registrationUrl = Utils.buildURL('/register?t=' + workspaceId, true)
+    const registrationUrl = Utils.buildURL('/register?t=' + workspace?.signupToken, true)
 
     return (
         <Modal
