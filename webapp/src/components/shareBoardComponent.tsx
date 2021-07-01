@@ -76,7 +76,7 @@ const ShareBoardComponent = React.memo((props: Props): JSX.Element => {
     shareUrl.searchParams.set('r', readToken)
 
     if (match.params.workspaceId) {
-        shareUrl.pathname = Utils.buildURL(`/workspace/${match.params.workspaceId}/shared`)
+        shareUrl.pathname = Utils.buildURL(`/${match.params.workspaceId}/shared`)
     } else {
         shareUrl.pathname = Utils.buildURL('/shared')
     }

@@ -14,6 +14,7 @@ interface IUser {
     id: string,
     username: string,
     email: string,
+    auth_data: string,
     props: Record<string, any>,
     createAt: number,
     updateAt: number,
