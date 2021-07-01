@@ -1,7 +1,6 @@
 package sqlstore
 
 import (
-	"database/sql"
 	"os"
 	"testing"
 
@@ -24,11 +23,7 @@ func SetupTests(t *testing.T) (store.Store, func()) {
 
 	logger := mlog.CreateTestLogger(t)
 
-	sqlDB, err := sql.Open(dbType, connectionString)
-	require.NoError(t, err)
-	err = sqlDB.Ping()
-	require.NoError(t, err)
-	store, err := New(dbType, connectionString, "test_", logger, sqlDB)
+	store, err := New(dbType, connectionString, "test_", logger)
 	require.Nil(t, err)
 
 	tearDown := func() {
