@@ -1,6 +1,8 @@
 package app
 
 import (
+	"log"
+
 	"github.com/google/uuid"
 	"github.com/mattermost/focalboard/server/model"
 	"github.com/mattermost/focalboard/server/services/auth"
@@ -61,6 +63,8 @@ func (a *App) GetUser(id string) (*model.User, error) {
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to find user")
 	}
+	log.Printf("GetUserByID: %v", user)
+
 	return user, nil
 }
 
@@ -118,8 +122,12 @@ func (a *App) Login(username, email, password, mfaToken string) (string, error) 
 	return session.Token, nil
 }
 
+type Worksp struct {
+	workspaceId string
+}
+
 // RegisterUser creates a new user if the provided data is valid.
-func (a *App) RegisterUser(username, email, password string) error {
+func (a *App) RegisterUser(username, email, password, workspace string) error {
 	var user *model.User
 	if username != "" {
 		var err error
@@ -154,7 +162,7 @@ func (a *App) RegisterUser(username, email, password string) error {
 		Password:    auth.HashPassword(password),
 		MfaSecret:   "",
 		AuthService: a.config.AuthMode,
-		AuthData:    "",
+		AuthData:    workspace,
 		Props:       map[string]interface{}{},
 	})
 	if err != nil {

@@ -69,12 +69,7 @@ func SetupTestHelper() *TestHelper {
 	if err := logger.Configure("", getTestConfig().LoggingCfgJSON); err != nil {
 		panic(err)
 	}
-	cfg := getTestConfig()
-	db, err := server.NewStore(cfg, logger)
-	if err != nil {
-		logger.Fatal("server.NewStore ERROR", mlog.Err(err))
-	}
-	srv, err := server.New(cfg, sessionToken, db, logger)
+	srv, err := server.New(getTestConfig(), sessionToken, logger)
 	if err != nil {
 		panic(err)
 	}

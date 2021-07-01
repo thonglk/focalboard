@@ -66,6 +66,7 @@ func (s *SQLStore) getUsersByCondition(condition sq.Eq) ([]*model.User, error) {
 	}
 
 	users, err := s.usersFromRows(rows)
+
 	if err != nil {
 		return nil, err
 	}
