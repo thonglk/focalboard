@@ -1,4 +1,3 @@
-// +build linux,amd64,go1.15,!cgo
 // Package classification Focalboard Server
 //
 // Server for Focalboard
