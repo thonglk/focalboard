@@ -69,6 +69,9 @@ const RegistrationLink = React.memo((props: Props) => {
                         >
                             {registrationUrl}
                         </a>
+
+                    </div>
+                    <div className='row'>
                         <Button
                             filled={true}
                             onClick={() => {
@@ -77,11 +80,6 @@ const RegistrationLink = React.memo((props: Props) => {
                             }}
                         >
                             {wasCopied ? intl.formatMessage({id: 'RegistrationLink.copiedLink', defaultMessage: 'Copied!'}) : intl.formatMessage({id: 'RegistrationLink.copyLink', defaultMessage: 'Copy link'})}
-                        </Button>
-                    </div>
-                    <div className='row'>
-                        <Button onClick={regenerateToken}>
-                            {intl.formatMessage({id: 'RegistrationLink.regenerateToken', defaultMessage: 'Regenerate token'})}
                         </Button>
                     </div>
                 </>}

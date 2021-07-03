@@ -83,6 +83,19 @@ func (a *API) RegisterRoutes(r *mux.Router) {
 
 	apiv1.HandleFunc("/workspaces/{workspaceID}/{rootID}/files", a.sessionRequired(a.handleUploadFile)).Methods("POST")
 
+	adminApi := r.PathPrefix("/api/admin").Subrouter()
+
+	adminApi.HandleFunc("/workspaces/{workspaceID}", a.handleGetWorkspace).Methods("GET")
+	adminApi.HandleFunc("/workspaces/{workspaceID}/regenerate_signup_token", a.handlePostWorkspaceRegenerateSignupToken).Methods("POST")
+	adminApi.HandleFunc("/workspaces/{workspaceID}/users", a.getWorkspaceUsers).Methods("GET")
+
+	// User APIs
+	adminApi.HandleFunc("/users/{userID}", a.handleGetUser).Methods("GET")
+	adminApi.HandleFunc("/users/{userID}/changepassword", a.handleChangePassword).Methods("POST")
+
+	adminApi.HandleFunc("/login", a.handleLogin).Methods("POST")
+	adminApi.HandleFunc("/register", a.handleRegister).Methods("POST")
+
 	// Get Files API
 
 	files := r.PathPrefix("/files").Subrouter()

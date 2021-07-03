@@ -189,7 +189,7 @@ func (s *SQLStore) UpdateUserPasswordByID(userID, password string) error {
 }
 
 func (s *SQLStore) GetUsersByWorkspace(workspaceID string) ([]*model.User, error) {
-	return s.getUsersByCondition(nil)
+	return s.getUsersByCondition(sq.Eq{"auth_data": workspaceID})
 }
 
 func (s *SQLStore) usersFromRows(rows *sql.Rows) ([]*model.User, error) {

@@ -100,6 +100,9 @@ watch-server-single-user:
 webapp:
 	cd webapp; npm run pack
 
+webapp2:
+	cd webapp; npm run pack; gulp copyScript
+
 watch-webapp:
 	cd webapp; npm run watchdev
 
