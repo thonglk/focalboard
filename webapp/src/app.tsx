@@ -99,7 +99,8 @@ const App = React.memo((): JSX.Element => {
                                 path='/'
                                 render={() => {
                                     if (initialLoad && !user) {
-                                        return <Redirect to='/login'/>
+                                        window.location.href = 'https://get.hyper.vin'
+                                        return null
                                     } else if (user) {
                                         Utils.log(`user: ${user.auth_data}`)
 
