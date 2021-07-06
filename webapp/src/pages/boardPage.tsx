@@ -173,12 +173,15 @@ class BoardPage extends React.Component<Props, State> {
     render(): JSX.Element {
         const {intl} = this.props
         const {workspace, workspaceTree} = this.state
-
-        Utils.log(`BoardPage.render (workspace ${localStorage.getItem('workspaceId')}) ${this.state.boardTree?.board?.title}`)
+        const wpParams = window.location.pathname.match(/\/\w+/g)
+        let workspaceId = localStorage.getItem('workspaceId') || '0'
+        if (wpParams && wpParams[0]) {
+            workspaceId = wpParams[0].substring(1)
+        }
+        Utils.log(`BoardPage.render (workspace ${workspaceId}) ${this.state.boardTree?.board?.title}`)
 
         // TODO: Make this less brittle. This only works because this is the root render function
-        octoClient.workspaceId = localStorage.getItem('workspaceId') || ''
-
+        octoClient.workspaceId = workspaceId
         if (this.props.readonly && this.state.syncFailed) {
             Utils.log('BoardPage.render: sync failed')
             return (
