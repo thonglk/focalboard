@@ -1,7 +1,10 @@
 name: Build-Windows-WPF
 
-on: workflow_dispatch
-
+on:
+  push:
+    branches:
+    - '**'
+    
 jobs:
 
   windows:
