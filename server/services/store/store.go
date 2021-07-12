@@ -31,6 +31,8 @@ type Store interface {
 	SetSystemSetting(key, value string) error
 
 	GetRegisteredUserCount() (int, error)
+	GetRegisteredUserAll() ([]*model.User, error)
+
 	GetUserByID(userID string) (*model.User, error)
 	GetUserByEmail(email string) (*model.User, error)
 	GetUserByUsername(username string) (*model.User, error)

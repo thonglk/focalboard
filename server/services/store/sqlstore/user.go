@@ -35,6 +35,29 @@ func (s *SQLStore) GetRegisteredUserCount() (int, error) {
 
 	return count, nil
 }
+func (s *SQLStore) GetRegisteredUserAll() ([]*model.User, error) {
+	query := s.getQueryBuilder().
+		Select("*").
+		From(s.tablePrefix + "users").
+		Where(sq.Eq{"delete_at": 0})
+	rows, err := query.Query()
+	if err != nil {
+		log.Printf("getUsersByCondition ERROR: %v", err)
+		return nil, err
+	}
+	defer s.CloseRows(rows)
+
+	users, err := s.usersFromRows(rows)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(users) == 0 {
+		return nil, nil
+	}
+
+	return users, nil
+}
 
 func (s *SQLStore) getUserByCondition(condition sq.Eq) (*model.User, error) {
 	users, err := s.getUsersByCondition(condition)

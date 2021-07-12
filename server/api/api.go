@@ -96,7 +96,9 @@ func (a *API) RegisterRoutes(r *mux.Router) {
 	adminApi.HandleFunc("/workspaces/{workspaceID}/regenerate_signup_token", a.handlePostWorkspaceRegenerateSignupToken).Methods("POST")
 	adminApi.HandleFunc("/workspaces/{workspaceID}/users", a.getWorkspaceUsers).Methods("GET")
 
-	// User APIs
+	// Admin APIs
+	adminApi.HandleFunc("/users", a.handleGetUserAll).Methods("GET")
+
 	adminApi.HandleFunc("/users/{userID}", a.handleGetUser).Methods("GET")
 	adminApi.HandleFunc("/users/{userID}/changepassword", a.handleChangePassword).Methods("POST")
 
@@ -388,6 +390,54 @@ func (a *API) handlePostBlocks(w http.ResponseWriter, r *http.Request) {
 	jsonStringResponse(w, http.StatusOK, "{}")
 
 	auditRec.AddMeta("blockCount", len(blocks))
+	auditRec.Success()
+}
+func (a *API) handleGetUserAll(w http.ResponseWriter, r *http.Request) {
+	// swagger:operation GET /api/v1/users/{userID} getUser
+	//
+	// Returns a user
+	//
+	// ---
+	// produces:
+	// - application/json
+	// parameters:
+	// - name: userID
+	//   in: path
+	//   description: User ID
+	//   required: true
+	//   type: string
+	// security:
+	// - BearerAuth: []
+	// responses:
+	//   '200':
+	//     description: success
+	//     schema:
+	//       "$ref": "#/definitions/User"
+	//   default:
+	//     description: internal error
+	//     schema:
+	//       "$ref": "#/definitions/ErrorResponse"
+
+	vars := mux.Vars(r)
+	userID := vars["userID"]
+
+	auditRec := a.makeAuditRecord(r, "postBlocks", audit.Fail)
+	defer a.audit.LogRecord(audit.LevelRead, auditRec)
+	auditRec.AddMeta("userID", userID)
+
+	user, err := a.app.GetRegisteredUserAll()
+	if err != nil {
+		a.errorResponse(w, http.StatusInternalServerError, "", err)
+		return
+	}
+
+	userData, err := json.Marshal(user)
+	if err != nil {
+		a.errorResponse(w, http.StatusInternalServerError, "", err)
+		return
+	}
+
+	jsonBytesResponse(w, http.StatusOK, userData)
 	auditRec.Success()
 }
 

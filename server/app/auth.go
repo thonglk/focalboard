@@ -30,6 +30,11 @@ func (a *App) IsValidReadToken(c store.Container, blockID string, readToken stri
 	return a.auth.IsValidReadToken(c, blockID, readToken)
 }
 
+// GetRegisteredUserAll returns the number of registered users.
+func (a *App) GetRegisteredUserAll() ([]*model.User, error) {
+	return a.store.GetRegisteredUserAll()
+}
+
 // GetRegisteredUserCount returns the number of registered users.
 func (a *App) GetRegisteredUserCount() (int, error) {
 	return a.store.GetRegisteredUserCount()
@@ -58,6 +63,7 @@ func (a *App) GetUser(id string) (*model.User, error) {
 	if len(id) < 1 {
 		return nil, errors.New("no user ID")
 	}
+	log.Printf("Run GetUserByID: %v", id)
 
 	user, err := a.store.GetUserByID(id)
 	if err != nil {
