@@ -2,7 +2,6 @@ package api
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -31,6 +30,14 @@ const (
 	ErrorNoWorkspaceCode    = 1000
 	ErrorNoWorkspaceMessage = "No workspace"
 )
+
+type PermissionError struct {
+	msg string
+}
+
+func (pe PermissionError) Error() string {
+	return pe.msg
+}
 
 // ----------------------------------------------------------------------------------------------------
 // REST APIs
@@ -142,7 +149,7 @@ func (a *API) hasValidReadTokenForBlock(r *http.Request, container store.Contain
 
 func (a *API) getContainerAllowingReadTokenForBlock(r *http.Request, blockID string) (*store.Container, error) {
 	ctx := r.Context()
-	session, _ := ctx.Value("session").(*model.Session)
+	session, _ := ctx.Value(sessionContextKey).(*model.Session)
 
 	if a.MattermostAuth {
 		// Workspace auth
@@ -167,7 +174,7 @@ func (a *API) getContainerAllowingReadTokenForBlock(r *http.Request, blockID str
 			return &container, nil
 		}
 
-		return nil, errors.New("access denied to workspace")
+		return nil, PermissionError{"access denied to workspace"}
 	}
 
 	// Native auth: always use root workspace
@@ -188,7 +195,7 @@ func (a *API) getContainerAllowingReadTokenForBlock(r *http.Request, blockID str
 		return &container, nil
 	}
 
-	return nil, errors.New("access denied to workspace")
+	return nil, PermissionError{"access denied to workspace"}
 }
 
 func (a *API) getContainer(r *http.Request) (*store.Container, error) {
@@ -271,16 +278,18 @@ func (a *API) handleGetBlocks(w http.ResponseWriter, r *http.Request) {
 	auditRec.Success()
 }
 
-func stampModifiedByUser(r *http.Request, blocks []model.Block, auditRec *audit.Record) {
+func stampModificationMetadata(r *http.Request, blocks []model.Block, auditRec *audit.Record) {
 	ctx := r.Context()
-	session := ctx.Value("session").(*model.Session)
+	session := ctx.Value(sessionContextKey).(*model.Session)
 	userID := session.UserID
 	if userID == SingleUser {
 		userID = ""
 	}
 
+	now := utils.GetMillis()
 	for i := range blocks {
 		blocks[i].ModifiedBy = userID
+		blocks[i].UpdateAt = now
 
 		if auditRec != nil {
 			auditRec.AddMeta("block_"+strconv.FormatInt(int64(i), 10), blocks[i])
@@ -364,9 +373,12 @@ func (a *API) handlePostBlocks(w http.ResponseWriter, r *http.Request) {
 	auditRec := a.makeAuditRecord(r, "postBlocks", audit.Fail)
 	defer a.audit.LogRecord(audit.LevelModify, auditRec)
 
-	stampModifiedByUser(r, blocks, auditRec)
+	stampModificationMetadata(r, blocks, auditRec)
 
-	err = a.app.InsertBlocks(*container, blocks)
+	ctx := r.Context()
+	session := ctx.Value(sessionContextKey).(*model.Session)
+
+	err = a.app.InsertBlocks(*container, blocks, session.UserID)
 	if err != nil {
 		a.errorResponse(w, http.StatusInternalServerError, "", err)
 		return
@@ -449,7 +461,7 @@ func (a *API) handleGetMe(w http.ResponseWriter, r *http.Request) {
 	//       "$ref": "#/definitions/ErrorResponse"
 
 	ctx := r.Context()
-	session := ctx.Value("session").(*model.Session)
+	session := ctx.Value(sessionContextKey).(*model.Session)
 	var user *model.User
 	var err error
 
@@ -517,7 +529,7 @@ func (a *API) handleDeleteBlock(w http.ResponseWriter, r *http.Request) {
 	//       "$ref": "#/definitions/ErrorResponse"
 
 	ctx := r.Context()
-	session := ctx.Value("session").(*model.Session)
+	session := ctx.Value(sessionContextKey).(*model.Session)
 	userID := session.UserID
 
 	vars := mux.Vars(r)
@@ -793,9 +805,11 @@ func (a *API) handleImport(w http.ResponseWriter, r *http.Request) {
 	auditRec := a.makeAuditRecord(r, "import", audit.Fail)
 	defer a.audit.LogRecord(audit.LevelModify, auditRec)
 
-	stampModifiedByUser(r, blocks, auditRec)
+	stampModificationMetadata(r, blocks, auditRec)
 
-	err = a.app.InsertBlocks(*container, blocks)
+	ctx := r.Context()
+	session := ctx.Value(sessionContextKey).(*model.Session)
+	err = a.app.InsertBlocks(*container, blocks, session.UserID)
 	if err != nil {
 		a.errorResponse(w, http.StatusInternalServerError, "", err)
 		return
@@ -943,7 +957,7 @@ func (a *API) handlePostSharing(w http.ResponseWriter, r *http.Request) {
 
 	// Stamp ModifiedBy
 	ctx := r.Context()
-	session := ctx.Value("session").(*model.Session)
+	session := ctx.Value(sessionContextKey).(*model.Session)
 	userID := session.UserID
 	if userID == SingleUser {
 		userID = ""
@@ -998,7 +1012,7 @@ func (a *API) handleGetWorkspace(w http.ResponseWriter, r *http.Request) {
 		workspaceID := vars["workspaceID"]
 
 		ctx := r.Context()
-		session := ctx.Value("session").(*model.Session)
+		session := ctx.Value(sessionContextKey).(*model.Session)
 		if !a.app.DoesUserHaveWorkspaceAccess(session.UserID, workspaceID) {
 			a.errorResponse(w, http.StatusUnauthorized, "", nil)
 			return
@@ -1276,9 +1290,9 @@ func (a *API) getWorkspaceUsers(w http.ResponseWriter, r *http.Request) {
 	workspaceID := vars["workspaceID"]
 
 	ctx := r.Context()
-	session := ctx.Value("session").(*model.Session)
+	session := ctx.Value(sessionContextKey).(*model.Session)
 	if !a.app.DoesUserHaveWorkspaceAccess(session.UserID, workspaceID) {
-		a.errorResponse(w, http.StatusForbidden, "Access denied to workspace", errors.New("access denied to workspace"))
+		a.errorResponse(w, http.StatusForbidden, "Access denied to workspace", PermissionError{"access denied to workspace"})
 		return
 	}
 

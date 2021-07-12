@@ -6,6 +6,15 @@ This changelog summarizes updates to our open source project. You can also find 
 
 ## [Work In Progress] - vNext Release - [Date TBD]
 
+## v0.8 Release - July, 2021
+* CreatedBy property. Thanks @harshilsharma63!
+* Fix dragged card order. Thanks @kamre!
+* Date format user setting. Thanks @darkLord19!
+* Add property tooltip in board view. Thanks @ditsemto!
+* Fix plugin links. Thanks @N3rdP1um23!
+* Add MySQL documentation. Thanks @ctlaltdieliet and @3l0w!
+* RPC API support. Thanks @agnivade!
+
 ## v0.7.0 Release - June, 2021
 * Multi-select property type. Thanks @hahmadia!
 * Checkbox property type. Thanks @mickmister!

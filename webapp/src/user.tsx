@@ -20,9 +20,9 @@ interface IUser {
     updateAt: number,
 }
 
-type WorkspaceUsersContextData = {
+type WorkspaceUsers = {
     users: Array<IUser>
     usersById: Map<string, IUser>
 }
 
-export {IUser, UserContext, WorkspaceUsersContext, WorkspaceUsersContextData}
+export {IUser, UserContext, WorkspaceUsersContext, WorkspaceUsers}
