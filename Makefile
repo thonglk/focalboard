@@ -98,7 +98,7 @@ watch-server-single-user:
 	cd server; env FOCALBOARDSERVER_ARGS=--single-user modd
 
 webapp:
-	cd webapp; npm run pack; gulp copyScript
+	cd webapp; npm run pack
 
 webapp2:
 	cd webapp; npm run pack; gulp copyScript
