@@ -75,7 +75,7 @@ func ReadConfigFile() (*Configuration, error) {
 	viper.SetDefault("Telemetry", true)
 	viper.SetDefault("WebhookUpdate", nil)
 	viper.SetDefault("SessionExpireTime", 60*60*24*30) // 30 days session lifetime
-	viper.SetDefault("SessionRefreshTime", 60*60*5)    // 5 minutes session refresh
+	viper.SetDefault("SessionRefreshTime", 60*60*24*7) // 7 days session refresh
 	viper.SetDefault("LocalOnly", false)
 	viper.SetDefault("EnableLocalMode", false)
 	viper.SetDefault("LocalModeSocketLocation", "/var/tmp/focalboard_local.socket")
