@@ -1,11 +1,10 @@
 {
 	"serverRoot": "http://localhost:8000",
 	"port": 8000,
-	"dbtype": "postgres",
-	"dbconfig": "postgres://postgres:Startup123@postgre-db.cvacj92ebylm.ap-southeast-1.rds.amazonaws.com/postgres?sslmode=disable&connect_timeout=10",
+	"dbtype": "sqlite3",
+	"dbconfig": "./focalboard.db",
 	"dbtableprefix": "",
 	"postgres_dbconfig": "dbname=focalboard sslmode=disable",
-	
 	"test_dbconfig": "file::memory:?cache=shared",
 	"useSSL": false,
 	"webpath": "./webapp/pack",
