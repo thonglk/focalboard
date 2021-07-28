@@ -5,8 +5,6 @@ import (
 	"encoding/json"
 	"errors"
 	"log"
-	"os"
-	"strconv"
 	"strings"
 	"time"
 
@@ -29,48 +27,7 @@ type MattermostAuthLayer struct {
 }
 
 // New creates a new SQL implementation of the store.
-<<<<<<< HEAD
 func New(dbType string, db *sql.DB, store store.Store) (*MattermostAuthLayer, error) {
-=======
-func New(dbType, connectionString string, store store.Store) (*MattermostAuthLayer, error) {
-	log.Println("connectDatabase", dbType, connectionString)
-	var err error
-
-	db, err := sql.Open(dbType, connectionString)
-	if err != nil {
-		log.Print("connectDatabase: ", err)
-
-		return nil, err
-	}
-	maxDBIdleConns, err := strconv.Atoi(os.Getenv("FOCALBOARD_DB_MAX_IDLE_CONNS"))
-	if err != nil {
-		maxDBIdleConns = 20
-	}
-	maxDBOpenConns, err := strconv.Atoi(os.Getenv("FOCALBOARD_DB_MAX_OPEN_CONNS"))
-	if err != nil {
-		maxDBOpenConns = 300
-	}
-	maxDBIdleTime, err := strconv.Atoi(os.Getenv("FOCALBOARD_DB_MAX_IDLE_TIME"))
-	if err != nil {
-		maxDBIdleTime = 300
-	}
-	maxDBLifetime, err := strconv.Atoi(os.Getenv("FOCALBOARD_DB_MAX_LIFETIME"))
-	if err != nil {
-		maxDBLifetime = 3600
-	}
-	db.SetMaxIdleConns(maxDBIdleConns)
-	db.SetMaxOpenConns(maxDBOpenConns)
-	db.SetConnMaxIdleTime(time.Duration(maxDBIdleTime) * time.Second)
-	db.SetConnMaxLifetime(time.Duration(maxDBLifetime) * time.Second)
-
-	err = db.Ping()
-	if err != nil {
-		log.Printf(`Database Ping failed: %v`, err)
-
-		return nil, err
-	}
-
->>>>>>> max-db
 	layer := &MattermostAuthLayer{
 		Store:  store,
 		dbType: dbType,
@@ -278,12 +235,8 @@ func (s *MattermostAuthLayer) getQueryBuilder() sq.StatementBuilderType {
 
 func (s *MattermostAuthLayer) GetUsersByWorkspace(workspaceID string) ([]*model.User, error) {
 	query := s.getQueryBuilder().
-<<<<<<< HEAD
 		Select("id", "username", "email", "password", "MFASecret as mfa_secret", "AuthService as auth_service", "COALESCE(AuthData, '') as auth_data",
 			"props", "CreateAt as create_at", "UpdateAt as update_at", "DeleteAt as delete_at").
-=======
-		Select("id", "username", "email", "password", "MFASecret as mfa_secret", "AuthService as auth_service", "COALESCE(AuthData, '') as auth_data", "props", "CreateAt as create_at", "UpdateAt as update_at", "DeleteAt as delete_at").
->>>>>>> max-db
 		From("Users").
 		Join("ChannelMembers ON ChannelMembers.UserID = Users.ID").
 		Where(sq.Eq{"deleteAt": 0}).
