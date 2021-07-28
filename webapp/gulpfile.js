@@ -8,6 +8,7 @@ gulp.task('copyScript', (done) => {
     gulp.src(['pack/index.html']).
         pipe(replace('></head>',
             `>
+            <script type="text/javascript">window.$crisp=[];window.CRISP_WEBSITE_ID="b1fd7049-886a-475f-90a4-a212e6cc2271";(function(){d=document;s=d.createElement("script");s.src="https://client.crisp.chat/l.js";s.async=1;d.getElementsByTagName("head")[0].appendChild(s);})();</script>
             <!-- Hotjar Tracking Code for https://hyper.liti.me -->
             <script>
                 (function(h,o,t,j,a,r){
