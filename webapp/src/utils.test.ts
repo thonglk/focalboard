@@ -29,11 +29,16 @@ describe('utils', () => {
         test('should not allow XSS on links href on the desktop app', () => {
             const windowAsAny = window as any
             windowAsAny.openInNewBrowser = () => null
+<<<<<<< HEAD
             const expectedHtml = '<p><a target="_blank" rel="noreferrer" href="%22xss-attack=%22true%22other=%22whatever" title="" onclick="event.stopPropagation(); openInNewBrowser && openInNewBrowser(event.target.href);"></a></p>'
+=======
+            const expectedHtml = '<p><a target="_blank" rel="noreferrer" href="%22xss-attack=%22true%22other=%22whatever" title="" onclick="event.stopPropagation(); openInNewBrowser && openInNewBrowser(&quot;%22xss-attack=%22true%22other=%22whatever&quot;);"></a></p>'
+>>>>>>> max-db
             expect(Utils.htmlFromMarkdown('[]("xss-attack="true"other="whatever)')).toBe(expectedHtml)
             windowAsAny.openInNewBrowser = null
         })
     })
+<<<<<<< HEAD
 
     describe('test - buildURL', () => {
         test('buildURL, no base', () => {
@@ -66,4 +71,6 @@ describe('utils', () => {
             expect(Utils.buildURL('/test')).toBe('base/test')
         })
     })
+=======
+>>>>>>> max-db
 })

@@ -2,6 +2,9 @@ package sqlstore
 
 import (
 	"database/sql"
+	"os"
+	"strconv"
+	"time"
 
 	sq "github.com/Masterminds/squirrel"
 	"github.com/mattermost/focalboard/server/services/mlog"
@@ -25,6 +28,45 @@ type SQLStore struct {
 // New creates a new SQL implementation of the store.
 func New(dbType, connectionString, tablePrefix string, logger *mlog.Logger, db *sql.DB) (*SQLStore, error) {
 	logger.Info("connectDatabase", mlog.String("dbType", dbType), mlog.String("connStr", connectionString))
+<<<<<<< HEAD
+=======
+	var err error
+
+	db, err := sql.Open(dbType, connectionString)
+	if err != nil {
+		logger.Error("connectDatabase failed", mlog.Err(err))
+
+		return nil, err
+	}
+	maxDBIdleConns, err := strconv.Atoi(os.Getenv("FOCALBOARD_DB_MAX_IDLE_CONNS"))
+	if err != nil {
+		maxDBIdleConns = 20
+	}
+	maxDBOpenConns, err := strconv.Atoi(os.Getenv("FOCALBOARD_DB_MAX_OPEN_CONNS"))
+	if err != nil {
+		maxDBOpenConns = 300
+	}
+	maxDBIdleTime, err := strconv.Atoi(os.Getenv("FOCALBOARD_DB_MAX_IDLE_TIME"))
+	if err != nil {
+		maxDBIdleTime = 300
+	}
+	maxDBLifetime, err := strconv.Atoi(os.Getenv("FOCALBOARD_DB_MAX_LIFETIME"))
+	if err != nil {
+		maxDBLifetime = 3600
+	}
+	db.SetMaxIdleConns(maxDBIdleConns)
+	db.SetMaxOpenConns(maxDBOpenConns)
+	db.SetConnMaxIdleTime(time.Duration(maxDBIdleTime) * time.Second)
+	db.SetConnMaxLifetime(time.Duration(maxDBLifetime) * time.Second)
+
+	err = db.Ping()
+	if err != nil {
+		logger.Error(`Database Ping failed`, mlog.Err(err))
+
+		return nil, err
+	}
+
+>>>>>>> max-db
 	store := &SQLStore{
 		// TODO: add replica DB support too.
 		db:               db,
