@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 	"runtime"
+	"strconv"
 	"sync"
 	"syscall"
 	"time"
@@ -181,10 +182,32 @@ func New(cfg *config.Configuration, singleUserToken string, db store.Store, logg
 
 func NewStore(config *config.Configuration, logger *mlog.Logger) (store.Store, error) {
 	sqlDB, err := sql.Open(config.DBType, config.DBConfigString)
+
 	if err != nil {
 		logger.Error("connectDatabase failed", mlog.Err(err))
+
 		return nil, err
 	}
+	maxDBIdleConns, err := strconv.Atoi(os.Getenv("FOCALBOARD_DB_MAX_IDLE_CONNS"))
+	if err != nil {
+		maxDBIdleConns = 20
+	}
+	maxDBOpenConns, err := strconv.Atoi(os.Getenv("FOCALBOARD_DB_MAX_OPEN_CONNS"))
+	if err != nil {
+		maxDBOpenConns = 300
+	}
+	maxDBIdleTime, err := strconv.Atoi(os.Getenv("FOCALBOARD_DB_MAX_IDLE_TIME"))
+	if err != nil {
+		maxDBIdleTime = 300
+	}
+	maxDBLifetime, err := strconv.Atoi(os.Getenv("FOCALBOARD_DB_MAX_LIFETIME"))
+	if err != nil {
+		maxDBLifetime = 3600
+	}
+	sqlDB.SetMaxIdleConns(maxDBIdleConns)
+	sqlDB.SetMaxOpenConns(maxDBOpenConns)
+	sqlDB.SetConnMaxIdleTime(time.Duration(maxDBIdleTime) * time.Second)
+	sqlDB.SetConnMaxLifetime(time.Duration(maxDBLifetime) * time.Second)
 
 	err = sqlDB.Ping()
 	if err != nil {
