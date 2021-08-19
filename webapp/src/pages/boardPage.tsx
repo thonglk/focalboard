@@ -1,62 +1,71 @@
 // Copyright (c) 2015-present Mattermost, Inc. All Rights Reserved.
 // See LICENSE.txt for license information.
-import React from 'react'
-import {FormattedMessage, injectIntl, IntlShape} from 'react-intl'
-import {withRouter, RouteComponentProps} from 'react-router-dom'
-import HotKeys from 'react-hot-keys'
+import React, {useEffect, useState} from 'react'
+import {batch} from 'react-redux'
+import {FormattedMessage, useIntl} from 'react-intl'
+import {generatePath, useHistory, useRouteMatch} from 'react-router-dom'
+import {useHotkeys} from 'react-hotkeys-hook'
 
-import {IBlock} from '../blocks/block'
-import {IWorkspace} from '../blocks/workspace'
+import {Block} from '../blocks/block'
+import {ContentBlock} from '../blocks/contentBlock'
+import {CommentBlock} from '../blocks/commentBlock'
+import {Board} from '../blocks/board'
+import {Card} from '../blocks/card'
+import {BoardView} from '../blocks/boardView'
 import {sendFlashMessage} from '../components/flashMessages'
 import Workspace from '../components/workspace'
 import mutator from '../mutator'
 import octoClient from '../octoClient'
-import {OctoListener} from '../octoListener'
 import {Utils} from '../utils'
-import {BoardTree, MutableBoardTree} from '../viewModel/boardTree'
-import {MutableWorkspaceTree, WorkspaceTree} from '../viewModel/workspaceTree'
+import wsClient, {WSClient} from '../wsclient'
 import './boardPage.scss'
-import {IUser, WorkspaceUsersContext, WorkspaceUsersContextData} from '../user'
+import {updateBoards, getCurrentBoard, setCurrent as setCurrentBoard} from '../store/boards'
+import {updateViews, getCurrentView, setCurrent as setCurrentView, getCurrentBoardViews} from '../store/views'
+import {updateCards} from '../store/cards'
+import {updateContents} from '../store/contents'
+import {updateComments} from '../store/comments'
+import {initialLoad, initialReadOnlyLoad} from '../store/initialLoad'
+import {useAppSelector, useAppDispatch} from '../store/hooks'
 
-type Props = RouteComponentProps<{workspaceId?: string}> & {
+type Props = {
     readonly?: boolean
-    intl: IntlShape
 }
 
-type State = {
-    boardId: string
-    viewId: string
-    workspace?: IWorkspace,
-    workspaceTree: WorkspaceTree
-    boardTree?: BoardTree
-    syncFailed?: boolean
-    websocketClosedTimeOutId?: ReturnType<typeof setTimeout>
-    websocketClosed?: boolean
-    workspaceUsers: WorkspaceUsersContextData
-}
+const websocketTimeoutForBanner = 5000
 
-class BoardPage extends React.Component<Props, State> {
-    private workspaceListener = new OctoListener()
+const BoardPage = (props: Props) => {
+    const intl = useIntl()
+    const board = useAppSelector(getCurrentBoard)
+    const activeView = useAppSelector(getCurrentView)
+    const boardViews = useAppSelector(getCurrentBoardViews)
+    const dispatch = useAppDispatch()
 
-    constructor(props: Props) {
-        super(props)
+    const history = useHistory()
+    const match = useRouteMatch<{boardId: string, viewId: string, workspaceId?: string}>()
+    const [websocketClosed, setWebsocketClosed] = useState(false)
 
+    // TODO: Make this less brittle. This only works because this is the root render function
+    useEffect(() => {
+        octoClient.workspaceId = match.params.workspaceId || '0'
+    }, [match.params.workspaceId])
+
+    // Backward compatibility: This can be removed in the future, this is for
+    // transform the old query params into routes
+    useEffect(() => {
         const queryString = new URLSearchParams(window.location.search)
-        let boardId = queryString.get('id') || ''
-        let viewId = queryString.get('v') || ''
-
-        if (!boardId) {
-            // Load last viewed boardView
-            boardId = localStorage.getItem('lastBoardId') || ''
-            viewId = localStorage.getItem('lastViewId') || ''
-            if (boardId) {
-                Utils.replaceUrlQueryParam('id', boardId)
+        const queryBoardId = queryString.get('id')
+        const queryViewId = queryString.get('v')
+        if (queryBoardId) {
+            const params = {...match.params, boardId: queryBoardId}
+            if (queryViewId) {
+                params.viewId = queryViewId
             }
-            if (viewId) {
-                Utils.replaceUrlQueryParam('v', viewId)
-            }
+            const newPath = generatePath(match.path, params)
+            history.replace(newPath)
         }
+    }, [])
 
+<<<<<<< HEAD
         this.state = {
             boardId,
             viewId,
@@ -83,26 +92,34 @@ class BoardPage extends React.Component<Props, State> {
 
         const activeView = this.state.boardTree?.activeView
         const prevActiveView = prevState.boardTree?.activeView
+=======
+    useEffect(() => {
+        const boardId = match.params.boardId
+        const viewId = match.params.viewId
+>>>>>>> origin/release-0.9.0
 
-        if (board?.icon !== prevBoard?.icon) {
-            Utils.setFavicon(board?.icon)
-        }
-        if (board?.title !== prevBoard?.title || activeView?.title !== prevActiveView?.title) {
-            if (board) {
-                let title = `${board.title}`
-                if (activeView?.title) {
-                    title += ` | ${activeView.title}`
+        if (!boardId) {
+            // Load last viewed boardView
+            const lastBoardId = localStorage.getItem('lastBoardId') || undefined
+            const lastViewId = localStorage.getItem('lastViewId') || undefined
+            if (lastBoardId) {
+                let newPath = generatePath(match.path, {...match.params, boardId: lastBoardId})
+                if (lastViewId) {
+                    newPath = generatePath(match.path, {...match.params, boardId: lastBoardId, viewId: lastViewId})
                 }
+<<<<<<< HEAD
                 document.title = title
             } else {
                 document.title = 'Hyper'
+=======
+                history.replace(newPath)
+                return
+>>>>>>> origin/release-0.9.0
             }
+            return
         }
-        if (this.state.workspace?.id !== prevState.workspace?.id) {
-            this.setWorkspaceUsers()
-        }
-    }
 
+<<<<<<< HEAD
     async setWorkspaceUsers() {
         const workspaceUsers = await octoClient.getWorkspaceUsers()
         Utils.log('setWorkspaceUsers')
@@ -125,44 +142,36 @@ class BoardPage extends React.Component<Props, State> {
 
     private undoRedoHandler = async (keyName: string, e: KeyboardEvent) => {
         if (e.target !== document.body || this.props.readonly) {
+=======
+        Utils.log(`attachToBoard: ${boardId}`)
+        if (!viewId && boardViews.length > 0) {
+            const newPath = generatePath(match.path, {...match.params, boardId, viewId: boardViews[0].id})
+            history.replace(newPath)
+>>>>>>> origin/release-0.9.0
             return
         }
 
-        if (keyName === 'ctrl+z' || keyName === 'cmd+z') { // Cmd+Z
-            Utils.log('Undo')
-            if (mutator.canUndo) {
-                const description = mutator.undoDescription
-                await mutator.undo()
-                if (description) {
-                    sendFlashMessage({content: `Undo ${description}`, severity: 'low'})
-                } else {
-                    sendFlashMessage({content: 'Undo', severity: 'low'})
-                }
-            } else {
-                sendFlashMessage({content: 'Nothing to Undo', severity: 'low'})
-            }
-        } else if (keyName === 'shift+ctrl+z' || keyName === 'shift+cmd+z') { // Shift+Cmd+Z
-            Utils.log('Redo')
-            if (mutator.canRedo) {
-                const description = mutator.redoDescription
-                await mutator.redo()
-                if (description) {
-                    sendFlashMessage({content: `Redo ${description}`, severity: 'low'})
-                } else {
-                    sendFlashMessage({content: 'Redu', severity: 'low'})
-                }
-            } else {
-                sendFlashMessage({content: 'Nothing to Redo', severity: 'low'})
-            }
-        }
-    }
+        localStorage.setItem('lastBoardId', boardId || '')
+        localStorage.setItem('lastViewId', viewId || '')
+        dispatch(setCurrentBoard(boardId || ''))
+        dispatch(setCurrentView(viewId || ''))
+    }, [match.params.boardId, match.params.viewId, history, boardViews])
 
-    componentDidMount(): void {
-        if (this.state.boardId) {
-            this.attachToBoard(this.state.boardId, this.state.viewId)
+    useEffect(() => {
+        Utils.setFavicon(board?.fields.icon)
+    }, [board?.fields.icon])
+
+    useEffect(() => {
+        if (board) {
+            let title = `${board.title}`
+            if (activeView?.title) {
+                title += ` | ${activeView.title}`
+            }
+            document.title = title
         } else {
-            this.sync()
+            document.title = 'Focalboard'
         }
+<<<<<<< HEAD
     }
 
     componentWillUnmount(): void {
@@ -191,230 +200,124 @@ class BoardPage extends React.Component<Props, State> {
                     </div>
                 </div>
             )
+=======
+    }, [board?.title, activeView?.title])
+
+    useEffect(() => {
+        let loadAction: any = initialLoad
+        let token = localStorage.getItem('focalboardSessionId') || ''
+        if (props.readonly) {
+            loadAction = initialReadOnlyLoad
+            const queryString = new URLSearchParams(window.location.search)
+            token = token || queryString.get('r') || ''
+>>>>>>> origin/release-0.9.0
+        }
+        dispatch(loadAction(match.params.boardId))
+
+        if (wsClient.state === 'open') {
+            wsClient.authenticate(match.params.workspaceId || '0', token)
+            wsClient.subscribeToWorkspace(match.params.workspaceId || '0')
         }
 
-        return (
-            <WorkspaceUsersContext.Provider value={this.state.workspaceUsers}>
-                <div className='BoardPage'>
-                    <HotKeys
-                        keyName='shift+ctrl+z,shift+cmd+z,ctrl+z,cmd+z'
-                        onKeyDown={this.undoRedoHandler}
-                    />
-                    {(this.state.websocketClosed) &&
-                    <div className='banner error'>
-                        <a
-                            href='https://www.focalboard.com/fwlink/websocket-connect-error.html'
-                            target='_blank'
-                            rel='noreferrer'
-                        >
-                            <FormattedMessage
-                                id='Error.websocket-closed'
-                                defaultMessage='Websocket connection closed, connection interrupted. If this persists, check your server or web proxy configuration.'
-                            />
-                        </a>
-                    </div>
-                    }
-
-                    <Workspace
-                        workspace={workspace}
-                        workspaceTree={workspaceTree}
-                        boardTree={this.state.boardTree}
-                        showView={(id, boardId) => {
-                            this.showView(id, boardId)
-                        }}
-                        showBoard={(id) => {
-                            this.showBoard(id)
-                        }}
-                        setSearchText={(text) => {
-                            this.setSearchText(text)
-                        }}
-                        readonly={this.props.readonly || false}
-                    />
-                </div>
-            </WorkspaceUsersContext.Provider>
-        )
-    }
-
-    private async attachToBoard(boardId?: string, viewId = '') {
-        Utils.log(`attachToBoard: ${boardId}`)
-        localStorage.setItem('lastBoardId', boardId || '')
-        localStorage.setItem('lastViewId', viewId)
-
-        if (boardId) {
-            this.sync(boardId, viewId)
-        } else {
-            // No board
-            this.setState({
-                boardTree: undefined,
-                boardId: '',
-                viewId: '',
+        const incrementalUpdate = (_: WSClient, blocks: Block[]) => {
+            batch(() => {
+                dispatch(updateBoards(blocks.filter((b: Block) => b.type === 'board' || b.deleteAt !== 0) as Board[]))
+                dispatch(updateViews(blocks.filter((b: Block) => b.type === 'view' || b.deleteAt !== 0) as BoardView[]))
+                dispatch(updateCards(blocks.filter((b: Block) => b.type === 'card' || b.deleteAt !== 0) as Card[]))
+                dispatch(updateComments(blocks.filter((b: Block) => b.type === 'comment' || b.deleteAt !== 0) as CommentBlock[]))
+                dispatch(updateContents(blocks.filter((b: Block) => b.type !== 'card' && b.type !== 'view' && b.type !== 'board' && b.type !== 'comment') as ContentBlock[]))
             })
         }
-    }
 
-    private async sync(boardId: string = this.state.boardId, viewId: string | undefined = this.state.viewId) {
-        Utils.log(`sync start: ${boardId}`)
-
-        let workspace: IWorkspace | undefined
-        if (!this.props.readonly) {
-            // Require workspace for editing, not for sharing (readonly)
-            workspace = await octoClient.getWorkspace()
-            if (!workspace) {
-                this.props.history.push(Utils.buildURL('/error?id=no_workspace'))
+        let timeout: ReturnType<typeof setTimeout>
+        const updateWebsocketState = (_: WSClient, newState: 'init'|'open'|'close'): void => {
+            if (newState === 'open') {
+                const newToken = localStorage.getItem('focalboardSessionId') || ''
+                wsClient.authenticate(match.params.workspaceId || '0', newToken)
+                wsClient.subscribeToWorkspace(match.params.workspaceId || '0')
             }
-        }
 
-        const workspaceTree = await MutableWorkspaceTree.sync()
-        const boardIds = [...workspaceTree.boards.map((o) => o.id), ...workspaceTree.boardTemplates.map((o) => o.id)]
-        this.setState({workspace, workspaceTree})
+            if (timeout) {
+                clearTimeout(timeout)
+            }
 
-        let boardIdsToListen: string[]
-        if (boardIds.length > 0) {
-            boardIdsToListen = ['', ...boardIds]
-        } else {
-            // Read-only view
-            boardIdsToListen = [this.state.boardId]
-        }
-
-        // Listen to boards plus all blocks at root (Empty string for parentId)
-        this.workspaceListener.open(
-            octoClient.workspaceId,
-            boardIdsToListen,
-            async (blocks) => {
-                Utils.log(`workspaceListener.onChanged: ${blocks.length}`)
-                this.incrementalUpdate(blocks)
-            },
-            () => {
-                Utils.log('workspaceListener.onReconnect')
-                this.sync()
-            },
-            (state) => {
-                switch (state) {
-                case 'close': {
-                    // Show error after a delay to ignore brief interruptions
-                    if (!this.state.websocketClosed && !this.state.websocketClosedTimeOutId) {
-                        const timeoutId = setTimeout(() => {
-                            this.setState({websocketClosed: true, websocketClosedTimeOutId: undefined})
-                        }, 5000)
-                        this.setState({websocketClosedTimeOutId: timeoutId})
-                    }
-                    break
-                }
-                case 'open': {
-                    if (this.state.websocketClosedTimeOutId) {
-                        clearTimeout(this.state.websocketClosedTimeOutId)
-                    }
-                    this.setState({websocketClosed: false, websocketClosedTimeOutId: undefined})
-                    Utils.log('Connection established')
-                    break
-                }
-                }
-            },
-        )
-
-        if (boardId) {
-            const boardTree = await MutableBoardTree.sync(boardId, viewId)
-
-            if (boardTree && boardTree.board) {
-                // Update url with viewId if it's different
-                if (boardTree.activeView.id !== this.state.viewId) {
-                    Utils.replaceUrlQueryParam('v', boardTree.activeView.id)
-                }
-
-                // TODO: Handle error (viewId not found)
-
-                this.setState({
-                    boardTree,
-                    boardId,
-                    viewId: boardTree.activeView!.id,
-                    syncFailed: false,
-                })
-                Utils.log(`sync complete: ${boardTree.board?.id} (${boardTree.board?.title})`)
+            if (newState === 'close') {
+                timeout = setTimeout(() => {
+                    setWebsocketClosed(true)
+                }, websocketTimeoutForBanner)
             } else {
-                // Board may have been deleted
-                this.setState({
-                    boardTree: undefined,
-                    viewId: '',
-                    syncFailed: true,
-                })
-                Utils.log(`sync complete: board ${boardId} not found`)
+                setWebsocketClosed(false)
             }
         }
-    }
 
-    private async incrementalUpdate(blocks: IBlock[]) {
-        const {workspaceTree, boardTree, viewId} = this.state
-
-        let newState = {workspaceTree, boardTree, viewId}
-
-        const newWorkspaceTree = MutableWorkspaceTree.incrementalUpdate(workspaceTree, blocks)
-        if (newWorkspaceTree) {
-            newState = {...newState, workspaceTree: newWorkspaceTree}
+        wsClient.addOnChange(incrementalUpdate)
+        wsClient.addOnReconnect(() => dispatch(loadAction(match.params.boardId)))
+        wsClient.addOnStateChange(updateWebsocketState)
+        return () => {
+            if (timeout) {
+                clearTimeout(timeout)
+            }
+            wsClient.unsubscribeToWorkspace(match.params.workspaceId || '0')
+            wsClient.removeOnChange(incrementalUpdate)
+            wsClient.removeOnReconnect(() => dispatch(loadAction(match.params.boardId)))
+            wsClient.removeOnStateChange(updateWebsocketState)
         }
+    }, [match.params.workspaceId, props.readonly])
 
-        let newBoardTree: BoardTree | undefined
-        if (boardTree) {
-            newBoardTree = MutableBoardTree.incrementalUpdate(boardTree, blocks)
-        } else if (this.state.boardId) {
-            // Corner case: When the page is viewing a deleted board, that is subsequently un-deleted on another client
-            newBoardTree = await MutableBoardTree.sync(this.state.boardId, this.state.viewId)
-        }
-
-        if (newBoardTree) {
-            newState = {...newState, boardTree: newBoardTree, viewId: newBoardTree.activeView.id}
+    useHotkeys('ctrl+z,cmd+z', () => {
+        Utils.log('Undo')
+        if (mutator.canUndo) {
+            const description = mutator.undoDescription
+            mutator.undo().then(() => {
+                if (description) {
+                    sendFlashMessage({content: `Undo ${description}`, severity: 'low'})
+                } else {
+                    sendFlashMessage({content: 'Undo', severity: 'low'})
+                }
+            })
         } else {
-            newState = {...newState, boardTree: undefined}
+            sendFlashMessage({content: 'Nothing to Undo', severity: 'low'})
         }
+    })
 
-        // Update url with viewId if it's different
-        if (newBoardTree && newBoardTree.activeView.id !== this.state.viewId) {
-            Utils.replaceUrlQueryParam('v', newBoardTree?.activeView.id)
-        }
-
-        this.setState(newState)
-    }
-
-    // IPageController
-    showBoard(boardId?: string): void {
-        const {boardTree} = this.state
-
-        if (boardTree?.board?.id === boardId) {
-            return
-        }
-
-        const newUrl = new URL(window.location.toString())
-        newUrl.searchParams.set('id', boardId || '')
-        newUrl.searchParams.set('v', '')
-        window.history.pushState({path: newUrl.toString()}, '', newUrl.toString())
-
-        this.attachToBoard(boardId)
-    }
-
-    showView(viewId: string, boardId: string = this.state.boardId): void {
-        localStorage.setItem('lastViewId', viewId)
-
-        if (this.state.boardTree && this.state.boardId === boardId) {
-            const newBoardTree = this.state.boardTree.copyWithView(viewId)
-            this.setState({boardTree: newBoardTree, viewId})
+    useHotkeys('shift+ctrl+z,shift+cmd+z', () => {
+        Utils.log('Redo')
+        if (mutator.canRedo) {
+            const description = mutator.redoDescription
+            mutator.redo().then(() => {
+                if (description) {
+                    sendFlashMessage({content: `Redo ${description}`, severity: 'low'})
+                } else {
+                    sendFlashMessage({content: 'Redu', severity: 'low'})
+                }
+            })
         } else {
-            this.attachToBoard(boardId, viewId)
+            sendFlashMessage({content: 'Nothing to Redo', severity: 'low'})
         }
+    })
 
-        const newUrl = new URL(window.location.toString())
-        newUrl.searchParams.set('id', boardId)
-        newUrl.searchParams.set('v', viewId)
-        window.history.pushState({path: newUrl.toString()}, '', newUrl.toString())
-    }
-
-    setSearchText(text?: string): void {
-        if (!this.state.boardTree) {
-            Utils.assertFailure('setSearchText: boardTree')
-            return
-        }
-
-        const newBoardTree = this.state.boardTree.copyWithSearchText(text)
-        this.setState({boardTree: newBoardTree})
-    }
+    return (
+        <div className='BoardPage'>
+            {websocketClosed &&
+                <div className='WSConnection error'>
+                    <a
+                        href='https://www.focalboard.com/fwlink/websocket-connect-error.html'
+                        target='_blank'
+                        rel='noreferrer'
+                    >
+                        <FormattedMessage
+                            id='Error.websocket-closed'
+                            defaultMessage='Websocket connection closed, connection interrupted. If this persists, check your server or web proxy configuration.'
+                        />
+                    </a>
+                </div>}
+            {props.readonly && board === undefined &&
+                <div className='error'>
+                    {intl.formatMessage({id: 'BoardPage.syncFailed', defaultMessage: 'Board may be deleted or access revoked.'})}
+                </div>}
+            <Workspace readonly={props.readonly || false}/>
+        </div>
+    )
 }
 
-export default withRouter(injectIntl(BoardPage))
+export default BoardPage

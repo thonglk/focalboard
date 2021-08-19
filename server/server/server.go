@@ -19,7 +19,6 @@ import (
 	"github.com/mattermost/focalboard/server/api"
 	"github.com/mattermost/focalboard/server/app"
 	"github.com/mattermost/focalboard/server/auth"
-	"github.com/mattermost/focalboard/server/context"
 	appModel "github.com/mattermost/focalboard/server/model"
 	"github.com/mattermost/focalboard/server/services/audit"
 	"github.com/mattermost/focalboard/server/services/config"
@@ -43,7 +42,6 @@ const (
 	cleanupSessionTaskFrequency = 10 * time.Minute
 	updateMetricsTaskFrequency  = 15 * time.Minute
 
-	//nolint:gomnd
 	minSessionExpiryTime = int64(60 * 60 * 24 * 31) // 31 days
 
 	MattermostAuthMod = "mattermost"
@@ -69,7 +67,7 @@ type Server struct {
 	api             *api.API
 }
 
-func New(cfg *config.Configuration, singleUserToken string, db store.Store, logger *mlog.Logger) (*Server, error) {
+func New(cfg *config.Configuration, singleUserToken string, db store.Store, logger *mlog.Logger, serverID string) (*Server, error) {
 	authenticator := auth.New(cfg, db)
 
 	wsServer := ws.NewServer(authenticator, singleUserToken, cfg.AuthMode == MattermostAuthMod, logger)
@@ -77,7 +75,7 @@ func New(cfg *config.Configuration, singleUserToken string, db store.Store, logg
 	filesBackendSettings := filestore.FileBackendSettings{}
 	filesBackendSettings.DriverName = cfg.FilesDriver
 	filesBackendSettings.Directory = cfg.FilesPath
-	filesBackendSettings.AmazonS3AccessKeyId = cfg.FilesS3Config.AccessKeyId
+	filesBackendSettings.AmazonS3AccessKeyId = cfg.FilesS3Config.AccessKeyID
 	filesBackendSettings.AmazonS3SecretAccessKey = cfg.FilesS3Config.SecretAccessKey
 	filesBackendSettings.AmazonS3Bucket = cfg.FilesS3Config.Bucket
 	filesBackendSettings.AmazonS3PathPrefix = cfg.FilesS3Config.PathPrefix
@@ -155,6 +153,7 @@ func New(cfg *config.Configuration, singleUserToken string, db store.Store, logg
 		app:         app,
 		cfg:         cfg,
 		telemetryID: telemetryID,
+		serverID:    serverID,
 		logger:      logger,
 		singleUser:  len(singleUserToken) > 0,
 	}
@@ -221,7 +220,7 @@ func NewStore(config *config.Configuration, logger *mlog.Logger) (store.Store, e
 		return nil, err
 	}
 	if config.AuthMode == MattermostAuthMod {
-		layeredStore, err2 := mattermostauthlayer.New(config.DBType, db.(*sqlstore.SQLStore).DBHandle(), db)
+		layeredStore, err2 := mattermostauthlayer.New(config.DBType, db.(*sqlstore.SQLStore).DBHandle(), db, logger)
 		if err2 != nil {
 			return nil, err2
 		}
@@ -343,7 +342,7 @@ func (s *Server) Logger() *mlog.Logger {
 func (s *Server) startLocalModeServer() error {
 	s.localModeServer = &http.Server{
 		Handler:     s.localRouter,
-		ConnContext: context.SetContextConn,
+		ConnContext: api.SetContextConn,
 	}
 
 	// TODO: Close and delete socket file on shutdown
@@ -390,6 +389,7 @@ type telemetryOptions struct {
 	app         *app.App
 	cfg         *config.Configuration
 	telemetryID string
+	serverID    string
 	logger      *mlog.Logger
 	singleUser  bool
 }
@@ -404,6 +404,7 @@ func initTelemetry(opts telemetryOptions) *telemetry.Service {
 			"build_hash":       appModel.BuildHash,
 			"edition":          appModel.Edition,
 			"operating_system": runtime.GOOS,
+			"server_id":        opts.serverID,
 		}, nil
 	})
 	telemetryService.RegisterTracker("config", func() (telemetry.Tracker, error) {

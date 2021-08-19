@@ -2,7 +2,11 @@
 <Package xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10"
     xmlns:uap="http://schemas.microsoft.com/appx/manifest/uap/windows10"
     xmlns:rescap="http://schemas.microsoft.com/appx/manifest/foundation/windows10/restrictedcapabilities">
+<<<<<<< HEAD
     <Identity Name="MattermostInc.Focalboard" Publisher="CN=5C59534D-C37D-4D0C-8464-26AA0D0B6EFE" Version="0.7.0.0" ProcessorArchitecture="x64" />
+=======
+    <Identity Name="MattermostInc.Focalboard" Publisher="CN=5C59534D-C37D-4D0C-8464-26AA0D0B6EFE" Version="0.9.0.0" ProcessorArchitecture="x64" />
+>>>>>>> origin/release-0.9.0
     <Properties>
         <DisplayName>Focalboard</DisplayName>
         <PublisherDisplayName>Mattermost, Inc.</PublisherDisplayName>

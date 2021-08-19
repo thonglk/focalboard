@@ -2,7 +2,7 @@
 // See LICENSE.txt for license information.
 import React, {useState, useEffect} from 'react'
 import {FormattedMessage, useIntl} from 'react-intl'
-import {useRouteMatch} from 'react-router'
+import {generatePath, useRouteMatch} from 'react-router'
 
 import {ISharing} from '../blocks/sharing'
 
@@ -26,7 +26,7 @@ const ShareBoardComponent = React.memo((props: Props): JSX.Element => {
     const [wasCopied, setWasCopied] = useState(false)
     const [sharing, setSharing] = useState<ISharing|undefined>(undefined)
     const intl = useIntl()
-    const match = useRouteMatch<{workspaceId?: string}>()
+    const match = useRouteMatch<{workspaceId?: string, boardId: string, viewId: string}>()
 
     const loadData = async () => {
         const newSharing = await client.getSharing(props.boardId)
@@ -76,9 +76,23 @@ const ShareBoardComponent = React.memo((props: Props): JSX.Element => {
     shareUrl.searchParams.set('r', readToken)
 
     if (match.params.workspaceId) {
+<<<<<<< HEAD
         shareUrl.pathname = Utils.buildURL(`/${match.params.workspaceId}/shared`)
+=======
+        const newPath = generatePath(':basename/workspace/:workspaceId/shared/:boardId/:viewId', {
+            basename: Utils.getFrontendBaseURL(),
+            boardId: match.params.boardId,
+            viewId: match.params.viewId,
+            workspaceId: match.params.workspaceId,
+        })
+        shareUrl.pathname = newPath
+>>>>>>> origin/release-0.9.0
     } else {
-        shareUrl.pathname = Utils.buildURL('/shared')
+        const newPath = generatePath('/shared/:boardId/:viewId', {
+            boardId: match.params.boardId,
+            viewId: match.params.viewId,
+        })
+        shareUrl.pathname = newPath
     }
 
     return (
@@ -91,7 +105,7 @@ const ShareBoardComponent = React.memo((props: Props): JSX.Element => {
                         {isSharing &&
                             <FormattedMessage
                                 id='ShareBoard.unshare'
-                                defaultMessage='Anyone with the link can view this board'
+                                defaultMessage='Anyone with the link can view this board and all cards in it'
                             />}
                         {!isSharing &&
                             <FormattedMessage
@@ -117,6 +131,7 @@ const ShareBoardComponent = React.memo((props: Props): JSX.Element => {
                         </a>
                         <Button
                             filled={true}
+                            size='small'
                             onClick={() => {
                                 Utils.copyTextToClipboard(shareUrl.toString())
                                 setWasCopied(true)
@@ -135,7 +150,11 @@ const ShareBoardComponent = React.memo((props: Props): JSX.Element => {
                         </Button>
                     </div>
                     <div className='row'>
-                        <Button onClick={onRegenerateToken}>
+                        <Button
+                            onClick={onRegenerateToken}
+                            emphasis='secondary'
+                            size='small'
+                        >
                             <FormattedMessage
                                 id='ShareBoard.regenerateToken'
                                 defaultMessage='Regenerate token'

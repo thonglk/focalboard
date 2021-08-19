@@ -5,16 +5,18 @@ import React from 'react'
 
 import {useDrop} from 'react-dnd'
 
-import {IPropertyOption} from '../../blocks/board'
+import {Board, IPropertyOption, IPropertyTemplate, BoardGroup} from '../../blocks/board'
+import {BoardView} from '../../blocks/boardView'
 import {Card} from '../../blocks/card'
-import {BoardTree, BoardTreeGroup} from '../../viewModel/boardTree'
 
 import TableGroupHeaderRow from './tableGroupHeaderRow'
 import TableRows from './tableRows'
 
 type Props = {
-    boardTree: BoardTree
-    group: BoardTreeGroup
+    board: Board
+    activeView: BoardView
+    groupByProperty?: IPropertyTemplate
+    group: BoardGroup
     readonly: boolean
     columnRefs: Map<string, React.RefObject<HTMLDivElement>>
     selectedCardIds: string[]
@@ -30,7 +32,7 @@ type Props = {
 }
 
 const TableGroup = React.memo((props: Props): JSX.Element => {
-    const {boardTree, group, onDropToGroup} = props
+    const {board, activeView, group, onDropToGroup, groupByProperty} = props
     const groupId = group.option.id
 
     const [{isOver}, drop] = useDrop(() => ({
@@ -58,7 +60,9 @@ const TableGroup = React.memo((props: Props): JSX.Element => {
         >
             <TableGroupHeaderRow
                 group={group}
-                boardTree={boardTree}
+                board={board}
+                activeView={activeView}
+                groupByProperty={groupByProperty}
                 hideGroup={props.hideGroup}
                 addCard={props.addCard}
                 readonly={props.readonly}
@@ -68,7 +72,8 @@ const TableGroup = React.memo((props: Props): JSX.Element => {
 
             {(group.cards.length > 0) &&
             <TableRows
-                boardTree={boardTree}
+                board={board}
+                activeView={activeView}
                 columnRefs={props.columnRefs}
                 cards={group.cards}
                 selectedCardIds={props.selectedCardIds}

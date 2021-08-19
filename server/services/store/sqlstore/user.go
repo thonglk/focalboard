@@ -3,7 +3,7 @@ package sqlstore
 import (
 	"database/sql"
 	"encoding/json"
-	"errors"
+	"fmt"
 	"log"
 	"time"
 
@@ -11,6 +11,14 @@ import (
 
 	sq "github.com/Masterminds/squirrel"
 )
+
+type UserNotFoundError struct {
+	id string
+}
+
+func (unf UserNotFoundError) Error() string {
+	return fmt.Sprintf("user not found (%s)", unf.id)
+}
 
 func (s *SQLStore) GetRegisteredUserCount() (int, error) {
 	query := s.getQueryBuilder().
@@ -64,6 +72,7 @@ func (s *SQLStore) getUsersByCondition(condition sq.Eq) ([]*model.User, error) {
 		log.Printf("getUsersByCondition ERROR: %v", err)
 		return nil, err
 	}
+	defer s.CloseRows(rows)
 
 	users, err := s.usersFromRows(rows)
 
@@ -132,7 +141,7 @@ func (s *SQLStore) UpdateUser(user *model.User) error {
 	}
 
 	if rowCount < 1 {
-		return errors.New("user not found")
+		return UserNotFoundError{user.ID}
 	}
 
 	return nil
@@ -157,7 +166,7 @@ func (s *SQLStore) UpdateUserPassword(username, password string) error {
 	}
 
 	if rowCount < 1 {
-		return errors.New("user not found")
+		return UserNotFoundError{username}
 	}
 
 	return nil
@@ -182,7 +191,7 @@ func (s *SQLStore) UpdateUserPasswordByID(userID, password string) error {
 	}
 
 	if rowCount < 1 {
-		return errors.New("user not found")
+		return UserNotFoundError{userID}
 	}
 
 	return nil
@@ -193,8 +202,6 @@ func (s *SQLStore) GetUsersByWorkspace(workspaceID string) ([]*model.User, error
 }
 
 func (s *SQLStore) usersFromRows(rows *sql.Rows) ([]*model.User, error) {
-	defer rows.Close()
-
 	users := []*model.User{}
 
 	for rows.Next() {

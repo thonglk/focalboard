@@ -6,6 +6,28 @@ This changelog summarizes updates to our open source project. You can also find 
 
 ## [Work In Progress] - vNext Release - [Date TBD]
 
+<<<<<<< HEAD
+=======
+## v0.9 Release - August, 2021
+* New date range property type. Thanks @sbishel!
+* Changed the urls to use routes instead of query parameters. Thanks @jespino!
+* Add clear button to value selectors. Thanks @jespino!
+* Fix auto-size columns in FireFox. Thanks @kamre!
+* Fix comments not appearing in readonly view. Thanks @harshilsharma63!
+* Multi-line card titles. Thanks @kamre!
+* Add unit tests for sqlstore. Thanks @yedamao!
+* Add makefile documentation. Thanks @Szymongib!
+
+## v0.8 Release - July, 2021
+* CreatedBy property. Thanks @harshilsharma63!
+* Fix dragged card order. Thanks @kamre!
+* Date format user setting. Thanks @darkLord19!
+* Add property tooltip in board view. Thanks @ditsemto!
+* Fix plugin links. Thanks @N3rdP1um23!
+* Add MySQL documentation. Thanks @ctlaltdieliet and @3l0w!
+* RPC API support. Thanks @agnivade!
+
+>>>>>>> origin/release-0.9.0
 ## v0.7.0 Release - June, 2021
 * Multi-select property type. Thanks @hahmadia!
 * Checkbox property type. Thanks @mickmister!

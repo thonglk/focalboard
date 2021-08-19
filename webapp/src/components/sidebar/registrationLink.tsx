@@ -8,6 +8,8 @@ import {sendFlashMessage} from '../../components/flashMessages'
 import client from '../../octoClient'
 import {Utils} from '../../utils'
 import Button from '../../widgets/buttons/button'
+import {getWorkspace, fetchWorkspace} from '../../store/workspace'
+import {useAppSelector, useAppDispatch} from '../../store/hooks'
 
 import Modal from '../modal'
 
@@ -20,18 +22,13 @@ type Props = {
 const RegistrationLink = React.memo((props: Props) => {
     const {onClose} = props
     const intl = useIntl()
+    const workspace = useAppSelector<IWorkspace|null>(getWorkspace)
+    const dispatch = useAppDispatch()
 
     const [wasCopied, setWasCopied] = useState(false)
-    const [workspace, setWorkspace] = useState<IWorkspace>()
-
-    const loadData = async () => {
-        const updatedWorkspace = await client.getWorkspace()
-        setWorkspace(updatedWorkspace)
-        setWasCopied(false)
-    }
 
     useEffect(() => {
-        loadData()
+        dispatch(fetchWorkspace())
     }, [])
 
     const regenerateToken = async () => {
@@ -39,7 +36,8 @@ const RegistrationLink = React.memo((props: Props) => {
         const accept = window.confirm(intl.formatMessage({id: 'RegistrationLink.confirmRegenerateToken', defaultMessage: 'This will invalidate previously shared links. Continue?'}))
         if (accept) {
             await client.regenerateWorkspaceSignupToken()
-            await loadData()
+            await dispatch(fetchWorkspace())
+            setWasCopied(false)
 
             const description = intl.formatMessage({id: 'RegistrationLink.tokenRegenerated', defaultMessage: 'Registration link regenerated'})
             sendFlashMessage({content: description, severity: 'low'})
@@ -74,6 +72,7 @@ const RegistrationLink = React.memo((props: Props) => {
                     <div className='row'>
                         <Button
                             filled={true}
+                            size='small'
                             onClick={() => {
                                 Utils.copyTextToClipboard(registrationUrl)
                                 setWasCopied(true)
@@ -82,6 +81,18 @@ const RegistrationLink = React.memo((props: Props) => {
                             {wasCopied ? intl.formatMessage({id: 'RegistrationLink.copiedLink', defaultMessage: 'Copied!'}) : intl.formatMessage({id: 'RegistrationLink.copyLink', defaultMessage: 'Copy link'})}
                         </Button>
                     </div>
+<<<<<<< HEAD
+=======
+                    <div className='row'>
+                        <Button
+                            onClick={regenerateToken}
+                            emphasis='secondary'
+                            size='small'
+                        >
+                            {intl.formatMessage({id: 'RegistrationLink.regenerateToken', defaultMessage: 'Regenerate token'})}
+                        </Button>
+                    </div>
+>>>>>>> origin/release-0.9.0
                 </>}
             </div>
         </Modal>

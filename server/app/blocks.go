@@ -6,11 +6,11 @@ import (
 )
 
 func (a *App) GetBlocks(c store.Container, parentID string, blockType string) ([]model.Block, error) {
-	if len(blockType) > 0 && len(parentID) > 0 {
+	if blockType != "" && parentID != "" {
 		return a.store.GetBlocksWithParentAndType(c, parentID, blockType)
 	}
 
-	if len(blockType) > 0 {
+	if blockType != "" {
 		return a.store.GetBlocksWithType(c, blockType)
 	}
 
@@ -29,24 +29,39 @@ func (a *App) GetParentID(c store.Container, blockID string) (string, error) {
 	return a.store.GetParentID(c, blockID)
 }
 
-func (a *App) InsertBlock(c store.Container, block model.Block) error {
-	err := a.store.InsertBlock(c, block)
+func (a *App) PatchBlock(c store.Container, blockID string, blockPatch *model.BlockPatch, userID string) error {
+	err := a.store.PatchBlock(c, blockID, blockPatch, userID)
+	if err != nil {
+		return err
+	}
+	a.metrics.IncrementBlocksPatched(1)
+	block, err := a.store.GetBlock(c, blockID)
+	if err != nil {
+		return nil
+	}
+	a.wsServer.BroadcastBlockChange(c.WorkspaceID, *block)
+	go a.webhook.NotifyUpdate(*block)
+	return nil
+}
+
+func (a *App) InsertBlock(c store.Container, block model.Block, userID string) error {
+	err := a.store.InsertBlock(c, &block, userID)
 	if err == nil {
 		a.metrics.IncrementBlocksInserted(1)
 	}
 	return err
 }
 
-func (a *App) InsertBlocks(c store.Container, blocks []model.Block) error {
-	for _, block := range blocks {
-		err := a.store.InsertBlock(c, block)
+func (a *App) InsertBlocks(c store.Container, blocks []model.Block, userID string) error {
+	for i := range blocks {
+		err := a.store.InsertBlock(c, &blocks[i], userID)
 		if err != nil {
 			return err
 		}
 
-		a.wsServer.BroadcastBlockChange(c.WorkspaceID, block)
+		a.wsServer.BroadcastBlockChange(c.WorkspaceID, blocks[i])
 		a.metrics.IncrementBlocksInserted(len(blocks))
-		go a.webhook.NotifyUpdate(block)
+		go a.webhook.NotifyUpdate(blocks[i])
 	}
 
 	return nil

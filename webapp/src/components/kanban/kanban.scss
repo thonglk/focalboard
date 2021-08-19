@@ -1,13 +1,21 @@
-.Kanban {
+.focalboard-body .Kanban {
+    overflow: auto;
+    flex: 1;
+
     .octo-board-header {
         display: flex;
         flex-direction: row;
 
         min-height: 30px;
-        padding-bottom: 16px;
+        padding: 16px 0;
         color: #909090;
+<<<<<<< HEAD
+=======
+        position: sticky;
+        top: 0;
+>>>>>>> origin/release-0.9.0
         z-index: 1;
-        background: rgb(var(--main-bg));
+        background: rgb(var(--center-channel-bg-rgb));
     }
 
     .octo-board-header-cell {
@@ -34,7 +42,7 @@
         .IconButton {
             background-color: unset;
             &:hover {
-                background-color: rgba(var(--body-color), 0.1);
+                background-color: rgba(var(--center-channel-color-rgb), 0.1);
             }
         }
 
@@ -57,6 +65,10 @@
         display: flex;
         flex-direction: row;
         flex: 0 1 auto;
+<<<<<<< HEAD
+=======
+        margin-top: 2px;
+>>>>>>> origin/release-0.9.0
     }
 
     .octo-board-column {
